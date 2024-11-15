@@ -86,6 +86,10 @@ async function gpt3(message) {
         throw error;
     }
 }
+const model = [
+    "yanzgpt-revolution-25b-v3.0", // Default
+    "yanzgpt-legacy-72b-v3.0" // Pro
+];
 async function gpt4o(message, model) {
     try {
         const response = await axios.post('https://yanzgpt.my.id/chat', {
