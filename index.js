@@ -11,7 +11,112 @@ app.set("json spaces", 2);
 
 // Middleware untuk CORS
 app.use(cors());
+async function blackbox(message, rioo) { // Membuat fungsi 
+const api = 'https://www.blackbox.ai/api/chat';
+const headers = {
+  'User-Agent': 'Postify/1.0.0',
+  'Accept': '*/*',
+  'Referer': 'https://www.blackbox.ai',
+  'Content-Type': 'application/json',
+  'Origin': 'https://www.blackbox.ai',
+  'DNT': '1',
+  'Sec-GPC': '1',
+  'Connection': 'keep-alive'
+};
 
+const request = (chat) => chat.map(({ files, ...rest }) => rest);
+const rhex = (bytes) => randomBytes(bytes).toString('hex');
+const uuid = () => randomUUID();
+
+const config = (model) => ({
+  trendingAgentMode: model[model] || {},
+  userSelectedModel: defaultModel[model] || undefined,
+  ...po[model]
+});
+
+const model = {
+  blackbox: {},
+  'llama-3.1-405b': { mode: true, id: 'llama-3.1-405b' },
+  'llama-3.1-70b': { mode: true, id: 'llama-3.1-70b' },
+  'gemini-1.5-flash': { mode: true, id: 'Gemini' }
+};
+
+const defaultModel = {
+  'gpt-4o': 'gpt-4o',
+  'claude-3.5-sonnet': 'claude-sonnet-3.5',
+  'gemini-pro': 'gemini-pro'
+};
+
+const po = {
+  'gpt-4o': { maxTokens: 4096 },
+  'claude-3.5-sonnet': { maxTokens: 8192 },
+  'gemini-pro': { maxTokens: 8192 }
+};
+
+const clear = (response) => {
+  return response.replace(/\$~~~\$(.*?)\$~~~\$/g, '').trim();
+};
+
+const BlackBox = {
+  async generate(chat, options, { max_retries = 5 } = {}) {
+    const random_id = rhex(16);
+    const random_user_id = uuid();
+    chat = request(chat);
+
+    const data = {
+      messages: chat,
+      id: random_id,
+      userId: random_user_id,
+      previewToken: null,
+      codeModelMode: true,
+      agentMode: {},
+      ...config(options.model),
+      isMicMode: false,
+      isChromeExt: false,
+      githubToken: null,
+      webSearchMode: true,
+      userSystemPrompt: null,
+      mobileClient: false,
+      maxTokens: 100000,
+      playgroundTemperature: parseFloat(options.temperature) || 0.7,
+      playgroundTopP: 0.9,
+      validated: "69783381-2ce4-4dbd-ac78-35e9063feabc",
+    };
+
+    try {
+      const response = await fetch(api, { method: 'POST', headers, body: JSON.stringify(data) });
+      if (!response.ok) {
+        throw new Error(`${await response.message()}`);
+      }
+
+      let tc = await response.message();
+      let tr = clear(tc);
+
+
+      if (tr.includes("$~~~$")) {
+        data.mode = 'continue';
+        if (!data.messages.some(msg => msg.content === tr)) {
+          data.messages.push({ content: tr, role: 'assistant' });
+        }
+
+        const cor = await fetch(api, { method: 'POST', headers, body: JSON.stringify(data) });
+        let ctc = await cor.message();
+        tr += clear(ctc);
+      }
+
+      return tr; 
+
+    } catch (err) {
+      if (max_retries > 0) {
+        console.error(err, "Mencoba ulang...");
+        return rioo.generate(chat, options, { max_retries: max_retries - 1 });
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+};
 // Fungsi untuk LuminAI
 async function gptlogic(message, logic) { // Membuat fungsi openai untuk dipanggil
     let response = await axios.post("https://chateverywhere.app/api/chat/", {
@@ -154,27 +259,6 @@ async function smartContract(message) {
   }
 }
 
-async function blackboxAIChat(message) {
-  try {
-    const response = await axios.post('https://www.blackbox.ai/api/chat', {
-      messages: [{ id: null, content: message, role: 'user' }],
-      id: null,
-      previewToken: null,
-      userId: null,
-      codeModelMode: true,
-      agentMode: {},
-      trendingAgentMode: {},
-      isMicMode: false,
-      isChromeExt: false,
-      githubToken: null
-    });
-
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-}
-
 // Endpoint untuk servis dokumen HTML
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -277,7 +361,7 @@ app.get('/api/blackboxAIChat', async (req, res) => {
     if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
-    const response = await blackboxAIChat(message);
+    const response = await blackbox(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
