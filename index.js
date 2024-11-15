@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const axios = require('axios');
 const fetch = require('node-fetch');
+const { randomBytes, randomUUID } = require('crypto')
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,113 +12,20 @@ app.set("json spaces", 2);
 
 // Middleware untuk CORS
 app.use(cors());
-async function blackbox(text, rioo) { // Membuat fungsi 
-const api = 'https://www.blackbox.ai/api/chat';
-const headers = {
-  'User-Agent': 'Postify/1.0.0',
-  'Accept': '*/*',
-  'Referer': 'https://www.blackbox.ai',
-  'Content-Type': 'application/json',
-  'Origin': 'https://www.blackbox.ai',
-  'DNT': '1',
-  'Sec-GPC': '1',
-  'Connection': 'keep-alive'
-};
 
-const request = (chat) => chat.map(({ files, ...rest }) => rest);
-const rhex = (bytes) => randomBytes(bytes).toString('hex');
-const uuid = () => randomUUID();
-
-const config = (model) => ({
-  trendingAgentMode: model[model] || {},
-  userSelectedModel: defaultModel[model] || undefined,
-  ...po[model]
-});
-
-const model = {
-  blackbox: {},
-  'llama-3.1-405b': { mode: true, id: 'llama-3.1-405b' },
-  'llama-3.1-70b': { mode: true, id: 'llama-3.1-70b' },
-  'gemini-1.5-flash': { mode: true, id: 'Gemini' }
-};
-
-const defaultModel = {
-  'gpt-4o': 'gpt-4o',
-  'claude-3.5-sonnet': 'claude-sonnet-3.5',
-  'gemini-pro': 'gemini-pro'
-};
-
-const po = {
-  'gpt-4o': { maxTokens: 4096 },
-  'claude-3.5-sonnet': { maxTokens: 8192 },
-  'gemini-pro': { maxTokens: 8192 }
-};
-
-const clear = (response) => {
-  return response.replace(/\$~~~\$(.*?)\$~~~\$/g, '').trim();
-};
-
-const BlackBox = {
-  async generate(chat, options, { max_retries = 5 } = {}) {
-    const random_id = rhex(16);
-    const random_user_id = uuid();
-    chat = request(chat);
-
-    const data = {
-      messages: chat,
-      id: random_id,
-      userId: random_user_id,
-      previewToken: null,
-      codeModelMode: true,
-      agentMode: {},
-      ...config(options.model),
-      isMicMode: false,
-      isChromeExt: false,
-      githubToken: null,
-      webSearchMode: true,
-      userSystemPrompt: null,
-      mobileClient: false,
-      maxTokens: 100000,
-      playgroundTemperature: parseFloat(options.temperature) || 0.7,
-      playgroundTopP: 0.9,
-      validated: "69783381-2ce4-4dbd-ac78-35e9063feabc",
-    };
-
-    try {
-      const response = await fetch(api, { method: 'POST', headers, body: JSON.stringify(data) });
-      if (!response.ok) {
-        throw new Error(`${await response.text()}`);
-      }
-
-      let tc = await response.text();
-      let tr = clear(tc);
-
-
-      if (tr.includes("$~~~$")) {
-        data.mode = 'continue';
-        if (!data.messages.some(msg => msg.content === tr)) {
-          data.messages.push({ content: tr, role: 'assistant' });
-        }
-
-        const cor = await fetch(api, { method: 'POST', headers, body: JSON.stringify(data) });
-        let ctc = await cor.text();
-        tr += clear(ctc);
-      }
-
-      return tr; 
-
-    } catch (err) {
-      if (max_retries > 0) {
-        console.error(err, "Mencoba ulang...");
-        return rioo.generate(chat, options, { max_retries: max_retries - 1 });
-      } else {
-        throw err;
-      }
-    }
-  }
+async function ttSearch(message) {
+  return new Promise(async (resolve, reject) => {
+    axios("https://tikwm.com/api/feed/search", {
+      data: {
+        keywords: message,
+      },
+      method: "POST",
+    }).then((res) => {
+      resolve(res.data.data);
+    });
+  });
 }
-};
-// Fungsi untuk LuminAI
+
 async function gptlogic(text, logic) { // Membuat fungsi openai untuk dipanggil
     let response = await axios.post("https://chateverywhere.app/api/chat/", {
         "model": {
@@ -157,7 +65,7 @@ async function aikurumi(message) {
         method: 'POST',
         body: formData
     });
-    return Buffer.from(('data:audio/mpeg;base64,' + await response.text()).split(',')[1], 'base64');
+    return Buffer.from(('data:audio/mpeg;base64,' + await response.message()).split(',')[1], 'base64');
 };
 const sendToGemini = async (prompt) => {
     const apiKey = 'AIzaSyD-BIXRyW2O3x4vLTFmfRWIk_pxnMc_SVs'; // Dapatkan apikey dari  https://aistudio.google.com/app/apikey
@@ -253,6 +161,34 @@ async function smartContract(message) {
     const response = await axios.post("https://smart-contract-gpt.vercel.app/api/chat", {
       messages: [{ content: message, role: "user" }]
     });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function blackboxAIChat(message) {
+  try {
+    const response = await axios.post('https://www.blackbox.ai/api/chat', {
+      messages: [{ id: null, content: message, role: 'user' }],
+      id: null,
+      previewToken: null,
+      userId: null,
+      codeModelMode: true,
+      agentMode: {},
+      trendingAgentMode: {},
+      isMicMode: false,
+      isChromeExt: false,
+      githubToken: null,
+      webSearchMode: true,
+      userSystemPrompt: null,
+      mobileClient: false,
+      maxTokens: 100000,
+      playgroundTemperature: parseFloat(options.temperature) || 0.7,
+      playgroundTopP: 0.9,
+      validated: "69783381-2ce4-4dbd-ac78-35e9063feabc",
+    });
+
     return response.data;
   } catch (error) {
     throw error;
@@ -359,9 +295,9 @@ app.get('/api/blackboxAIChat', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
-      return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
+      return res.status(400).json({ error: 'Parameter "text" tidak ditemukan' });
     }
-    const response = await blackbox(message);
+    const response = await blackboxAIChat(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
@@ -394,6 +330,22 @@ app.get('/api/aikurumi', async (req, res) => {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
     const response = await aikurumi(message);
+    res.status(200).json({
+      status: 200,
+      creator: "RiooXdzz",
+      data: { response }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get('/api/search-tiktok', async (req, res) => {
+  try {
+    const message = req.query.message;
+    if (!message) {
+      return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
+    }
+    const response = await ttSearch(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
