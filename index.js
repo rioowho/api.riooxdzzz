@@ -132,22 +132,40 @@ async function blackboxAIChat(message) {
     throw error;
   }
 }
-async function llama(message) {
-  return new Promise(async (resolve, reject) => {
-    axios.get('https://api.yanzbotz.live/api/ai/labs-perplexity', {
-      params: {
-        query: message,
-        model: 'llama-3.1-sonar-large-128k-online'
-      }
-    })
-    .then(response => {
-      resolve(response.data);
-    })
-    .catch(error => {
-      reject(error);
+const model = "70b";
+async function llama3(message) {
+  if (!["70b", "8b"].some((qq) => model == qq)) model = "70b"; //correct
+  try {
+    const BASE_URL = "https://llama3-enggan-ngoding.vercel.app/api/llama";
+    const payload = {
+      messages: [
+        {
+          role: "system",
+          content: `Kamu adalah Meta AI Berbahasa Indonesia yang di kembangkan oleh Meta Platforms Inc. dan SSA Team, kamu bisa apa saja, kamu menggunakan Google sebagai search engine utamamu`,
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+      model: "meta-llama-3-70B-Instruct",
+    };
+    const response = await fetch(BASE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 13_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.1 Mobile/15E148",
+      },
+      body: JSON.stringify(payload),
     });
-  });
-};
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+}
 // Endpoint untuk servis dokumen HTML
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -224,13 +242,13 @@ app.get('/api/gpt3', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.get('/api/llama', async (req, res) => {
+app.get('/api/llama3', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
-    const response = await llama(message);
+    const response = await llama3(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
