@@ -4,13 +4,10 @@ const path = require('path');
 const axios = require('axios');
 const fetch = require('node-fetch');
 const { randomBytes, randomUUID } = require('crypto');
-  const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.enable("trust proxy");
 app.set("json spaces", 2);
-  const Used_Apikey = "AIzaSyD-BIXRyW2O3x4vLTFmfRWIk_pxnMc_SVs"
-const genAI = new GoogleGenerativeAI(Used_Apikey);
 
 // Middleware untuk CORS
 app.use(cors());
@@ -82,12 +79,6 @@ async function LuminAI(message, model = "gpt-4o-mini") {
                 }
             }
 
-async function geminipro(message) {
-  const model = genAI.getGenerativeModel({ model: model: "gemini-1.5-flash" });
-  const result = await model.generateText({ message });
-  console.log(result.text);
-}
-
 // Fungsi untuk degreeGuru
 async function degreeGuru(message, prompt) {
   try {
@@ -141,7 +132,22 @@ async function blackboxAIChat(message) {
     throw error;
   }
 }
-
+async function llama(message) {
+  return new Promise(async (resolve, reject) => {
+    axios.get('https://api.yanzbotz.live/api/ai/labs-perplexity', {
+      params: {
+        query: message,
+        model: 'llama-3.1-sonar-large-128k-online'
+      }
+    })
+    .then(response => {
+      resolve(response.data);
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+};
 // Endpoint untuk servis dokumen HTML
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -218,13 +224,13 @@ app.get('/api/gpt3', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.get('/api/geminipro', async (req, res) => {
+app.get('/api/llama', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
-    const response = await geminipro(message);
+    const response = await llama(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
