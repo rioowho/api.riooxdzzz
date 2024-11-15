@@ -35,85 +35,72 @@ async function ttSearch(message) {
     });
   });
 }
-
-async function gptlogic(message, logic) { // Membuat fungsi openai untuk dipanggil
-try {
-    let response = await axios.post("https://chateverywhere.app/api/chat/", {
-        "model": {
-            "id": "gpt-4",
-            "name": "GPT-4",
-            "maxLength": 32000,  // Sesuaikan token limit jika diperlukan
-            "tokenLimit": 8000,  // Sesuaikan token limit untuk model GPT-4
-            "completionTokenLimit": 5000,  // Sesuaikan jika diperlukan
-            "deploymentName": "gpt-4"
-        },
-        "messages": [
-            {
-                "pluginId": null,
-                "content": message, 
-                "role": "user"
-            }
-        ],
-        "prompt": logic, 
-        "temperature": 0.5
-    }, { 
-        headers: {
-            "Accept": "/*/",
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+const model = [
+    "yanzgpt-revolution-25b-v3.0", // Default
+    "yanzgpt-legacy-72b-v3.0" // Pro
+];
+async function chatgpt(message, model) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const response = await axios.post("https://yanzgpt.my.id/chat", {
+                query: message,
+                model: model
+            }, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+            resolve(response.data);
+        } catch (error) {
+            reject(error);
         }
     });
-    
-    return response.data;
-} catch (error) {
-console.error("Terjadi kesalahan:", error.message);
-throw new Error("Gagal mendapatkan respons dari AI.");
-}
-}
-
-async function aikurumi(message) {
-    const formData = new FormData();
-    formData.append("locale", 'id-ID');
-    formData.append("content", `<voice name="ja-JP-AoiNeural">${message}</voice>`);
-    formData.append("ip", '46.161.194.33');
-    const response = await fetch('https://app.micmonster.com/restapi/create', {
-        method: 'POST',
-        body: formData
-    });
-    return Buffer.from(('data:audio/mpeg;base64,' + await response.message()).split(',')[1], 'base64');
 };
-const sendToGemini = async (prompt) => {
-    const apiKey = 'AIzaSyD-BIXRyW2O3x4vLTFmfRWIk_pxnMc_SVs'; // Dapatkan apikey dari  https://aistudio.google.com/app/apikey
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-    const body = {
-        contents: [
-            {
-                parts: [
-                    { text: prompt }
-                ]
-            }
-        ]
+
+async function gpt3(message) {
+    const url = 'https://shinoa.us.kg/api/gpt/gpt3';
+    const headers = {
+        'accept': '*/*',
+        'api_key': 'kyuurzy',
+        'Content-Type': 'application/json'
     };
+    const body = JSON.stringify({
+        text: message
+    });
+
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
+            headers: headers,
+            body: body
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
-            return data; 
-        } else {
-            throw new Error(data.error.message || 'Request failed');
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
         }
+
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error('Error:', error.message);
-        return null;
+        console.error('Request failed:', error);
+        throw error;
     }
-};
+}
+async function gpt4o(message, model) {
+    try {
+        const response = await axios.post('https://yanzgpt.my.id/chat', {
+            query: message, 
+            model: model
+        });
+
+        return response.data;
+    } catch (error) {
+        // Menangani error jika terjadi
+        console.error('Error posting message:', error);
+        throw error;
+    }
+}
+
 async function LuminAI(message, model = "gpt-4o-mini") {
                 try {
                     const response = await axios.post('https://luminai.my.id/v2', {
@@ -128,20 +115,6 @@ async function LuminAI(message, model = "gpt-4o-mini") {
                 }
             }
 
-// Fungsi untuk ragBot
-async function ragBot(message) {
-  try {
-    const response = await axios.post('https://ragbot-starter.vercel.app/api/chat', {
-      messages: [{ role: 'user', content: message }],
-      useRag: true,
-      llm: 'gpt-3.5-turbo',
-      similarityMetric: 'cosine'
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-}
 
 // Fungsi untuk degreeGuru
 async function degreeGuru(message, prompt) {
@@ -150,18 +123,6 @@ async function degreeGuru(message, prompt) {
       messages: [
         { role: 'user', content: message }
       ]
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-}
-
-// Fungsi untuk pinecone
-async function pinecone(message) {
-  try {
-    const response = await axios.post('https://pinecone-vercel-example.vercel.app/api/chat', {
-      messages: [{ role: 'user', content: message }]
     });
     return response.data;
   } catch (error) {
@@ -269,13 +230,13 @@ app.get('/api/degreeguru', async (req, res) => {
 });
 
 // Endpoint untuk pinecone
-app.get('/api/pinecone', async (req, res) => {
+app.get('/api/gpt3', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
-    const response = await pinecone(message);
+    const response = await gpt3(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
@@ -321,13 +282,13 @@ app.get('/api/blackboxAIChat', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.get('/api/gptlogic', async (req, res) => {
+app.get('/api/gpt4o', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
-    const response = await gptlogic(message);
+    const response = await gpt4o(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
@@ -337,7 +298,7 @@ app.get('/api/gptlogic', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.get('/api/aikurumi', async (req, res) => {
+app.get('/api/chatgpt', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
