@@ -133,7 +133,7 @@ async function blackboxAIChat(message) {
     throw error;
   }
 }
-async function chatgpt(message) {
+async function openai(message) {
   const messages = [
     {
       role: "system",
@@ -289,13 +289,13 @@ app.get('/api/llama3', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.get('/api/chatgpt', async (req, res) => {
+app.get('/api/openai', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
-    const response = await chatgpt(message);
+    const response = await openai(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
