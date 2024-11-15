@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const fetch = require('node-fetch');
 const { randomBytes, randomUUID } = require('crypto');
+const model = "70b";
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.enable("trust proxy");
@@ -132,7 +133,37 @@ async function blackboxAIChat(message) {
     throw error;
   }
 }
-const model = "70b";
+async function chatgpt(message) {
+  const messages = [
+    {
+      role: "system",
+      content:
+        "Kamu Adalah RiooXdzz",
+    },
+    { role: "user", content: message },
+  ];
+
+  try {
+    const response = await fetch(
+      "https://deepenglish.com/wp-json/ai-chatbot/v1/chat",
+      {
+        method: "POST",
+        headers: {
+          Accept: "text/event-stream",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages }),
+      },
+    );
+
+    const responseData = await response.json();
+    return responseData;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+
 async function llama3(message) {
   if (!["70b", "8b"].some((qq) => model == qq)) model = "70b"; //correct
   try {
@@ -249,6 +280,22 @@ app.get('/api/llama3', async (req, res) => {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
     const response = await llama3(message);
+    res.status(200).json({
+      status: 200,
+      creator: "RiooXdzz",
+      data: { response }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get('/api/chatgpt', async (req, res) => {
+  try {
+    const message = req.query.message;
+    if (!message) {
+      return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
+    }
+    const response = await chatgpt(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
