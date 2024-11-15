@@ -118,7 +118,7 @@ const BlackBox = {
 }
 };
 // Fungsi untuk LuminAI
-async function gptlogic(message, logic) { // Membuat fungsi openai untuk dipanggil
+async function gptlogic(text, logic) { // Membuat fungsi openai untuk dipanggil
     let response = await axios.post("https://chateverywhere.app/api/chat/", {
         "model": {
             "id": "gpt-4",
@@ -131,7 +131,7 @@ async function gptlogic(message, logic) { // Membuat fungsi openai untuk dipangg
         "messages": [
             {
                 "pluginId": null,
-                "content": message, 
+                "content": text, 
                 "role": "user"
             }
         ],
