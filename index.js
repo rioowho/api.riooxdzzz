@@ -82,7 +82,7 @@ async function LuminAI(message, model = "gpt-4o-mini") {
                 }
             }
 
-async function generateResponse(message) {
+async function geminipro(message) {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
   const result = await model.generateText({ message });
   console.log(result.text);
@@ -218,7 +218,22 @@ app.get('/api/gpt3', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
+app.get('/api/geminipro', async (req, res) => {
+  try {
+    const message = req.query.message;
+    if (!message) {
+      return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
+    }
+    const response = await geminipro(message);
+    res.status(200).json({
+      status: 200,
+      creator: "RiooXdzz",
+      data: { response }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // Endpoint untuk smartContract
 app.get('/api/smartcontract', async (req, res) => {
   try {
