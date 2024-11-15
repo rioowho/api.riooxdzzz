@@ -36,18 +36,6 @@ async function ttSearch(message) {
   });
 }
 
-const axios = require("axios");
-
-async function geminipro(message) {
-    const response = await axios.post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent", {
-        contents: [{ parts: [{ text: message }] }],
-    }, {
-        headers: { "Content-Type": "application/json" },
-        params: { key: "AIzaSyD-BIXRyW2O3x4vLTFmfRWIk_pxnMc_SVs" },
-    });
-    return response.data.generatedText;
-}
-
 async function gpt3(message) {
     const url = 'https://shinoa.us.kg/api/gpt/gpt3';
     const headers = {
@@ -260,22 +248,6 @@ app.get('/api/blackboxAIChat', async (req, res) => {
   }
 });
 
-app.get('/api/geminipro', async (req, res) => {
-  try {
-    const message = req.query.message;
-    if (!message) {
-      return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
-    }
-    const response = await geminipro(message);
-    res.status(200).json({
-      status: 200,
-      creator: "RiooXdzz",
-      data: { response }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 app.get('/api/search-tiktok', async (req, res) => {
   try {
     const message = req.query.message;
