@@ -35,15 +35,12 @@ async function ttSearch(message) {
     });
   });
 }
-const model = [
-    "yanzgpt-revolution-25b-v3.0", // Default
-    "yanzgpt-legacy-72b-v3.0" // Pro
-];
-async function chatgpt(message, model) {
+
+async function chatgpt(message, model = "yanzgpt-legacy-72b-v3.0") {
     return new Promise(async (resolve, reject) => {
         try {
             const response = await axios.post("https://yanzgpt.my.id/chat", {
-                query: message,
+                text: message,
                 model: model
             }, {
                 headers: {
@@ -83,24 +80,6 @@ async function gpt3(message) {
         return data;
     } catch (error) {
         console.error('Request failed:', error);
-        throw error;
-    }
-}
-const model = [
-    "yanzgpt-revolution-25b-v3.0", // Default
-    "yanzgpt-legacy-72b-v3.0" // Pro
-];
-async function gpt4o(message, model) {
-    try {
-        const response = await axios.post('https://yanzgpt.my.id/chat', {
-            query: message, 
-            model: model
-        });
-
-        return response.data;
-    } catch (error) {
-        // Menangani error jika terjadi
-        console.error('Error posting message:', error);
         throw error;
     }
 }
@@ -286,22 +265,7 @@ app.get('/api/blackboxAIChat', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.get('/api/gpt4o', async (req, res) => {
-  try {
-    const message = req.query.message;
-    if (!message) {
-      return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
-    }
-    const response = await gpt4o(message);
-    res.status(200).json({
-      status: 200,
-      creator: "RiooXdzz",
-      data: { response }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+
 app.get('/api/chatgpt', async (req, res) => {
   try {
     const message = req.query.message;
