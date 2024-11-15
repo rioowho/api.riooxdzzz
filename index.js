@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const axios = require('axios');
 const fetch = require('node-fetch');
-const { randomBytes, randomUUID } = require('crypto')
+const { randomBytes, randomUUID } = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
