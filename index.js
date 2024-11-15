@@ -36,23 +36,17 @@ async function ttSearch(message) {
   });
 }
 
-async function chatgpt(message, model = "yanzgpt-legacy-72b-v3.0") {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const response = await axios.post("https://yanzgpt.my.id/chat", {
-                text: message,
-                model: model
-            }, {
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            });
-            resolve(response.data);
-        } catch (error) {
-            reject(error);
-        }
+const axios = require("axios");
+
+async function geminipro(message) {
+    const response = await axios.post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent", {
+        contents: [{ parts: [{ text: message }] }],
+    }, {
+        headers: { "Content-Type": "application/json" },
+        params: { key: "AIzaSyD-BIXRyW2O3x4vLTFmfRWIk_pxnMc_SVs" },
     });
-};
+    return response.data.generatedText;
+}
 
 async function gpt3(message) {
     const url = 'https://shinoa.us.kg/api/gpt/gpt3';
@@ -266,13 +260,13 @@ app.get('/api/blackboxAIChat', async (req, res) => {
   }
 });
 
-app.get('/api/chatgpt', async (req, res) => {
+app.get('/api/geminipro', async (req, res) => {
   try {
     const message = req.query.message;
     if (!message) {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
-    const response = await chatgpt(message);
+    const response = await geminipro(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
