@@ -36,7 +36,8 @@ async function ttSearch(message) {
   });
 }
 
-async function gptlogic(text, logic) { // Membuat fungsi openai untuk dipanggil
+async function gptlogic(message, logic) { // Membuat fungsi openai untuk dipanggil
+try {
     let response = await axios.post("https://chateverywhere.app/api/chat/", {
         "model": {
             "id": "gpt-4",
@@ -49,7 +50,7 @@ async function gptlogic(text, logic) { // Membuat fungsi openai untuk dipanggil
         "messages": [
             {
                 "pluginId": null,
-                "content": text, 
+                "content": message, 
                 "role": "user"
             }
         ],
@@ -62,8 +63,11 @@ async function gptlogic(text, logic) { // Membuat fungsi openai untuk dipanggil
         }
     });
     
-    let result = response.data;
-    return result;
+    return response.data;
+} catch (error) {
+console.error("Terjadi kesalahan:", error.message);
+throw new Error("Gagal mendapatkan respons dari AI.");
+}
 }
 
 async function aikurumi(message) {
@@ -194,7 +198,7 @@ async function blackboxAIChat(message) {
       userSystemPrompt: null,
       mobileClient: false,
       maxTokens: 100000,
-      playgroundTemperature: parseFloat(options.temperature) || 0.7,
+      playgroundTemperature: parseFloat(message.temperature) || 0.7,
       playgroundTopP: 0.9,
       validated: "69783381-2ce4-4dbd-ac78-35e9063feabc",
     });
