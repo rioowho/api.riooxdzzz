@@ -4,13 +4,13 @@ const path = require('path');
 const axios = require('axios');
 const fetch = require('node-fetch');
 const { randomBytes, randomUUID } = require('crypto');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+  const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require("@google/generative-ai");
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.enable("trust proxy");
 app.set("json spaces", 2);
-
-const genAI = new GoogleGenerativeAI({ apiKey: "AIzaSyD-BIXRyW2O3x4vLTFmfRWIk_pxnMc_SVs" });
+  const Used_Apikey = "AIzaSyD-BIXRyW2O3x4vLTFmfRWIk_pxnMc_SVs"
+const genAI = new GoogleGenerativeAI(Used_Apikey);
 
 // Middleware untuk CORS
 app.use(cors());
@@ -83,7 +83,7 @@ async function LuminAI(message, model = "gpt-4o-mini") {
             }
 
 async function geminipro(message) {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+  const model = genAI.getGenerativeModel({ model: model: "gemini-1.5-flash" });
   const result = await model.generateText({ message });
   console.log(result.text);
 }
