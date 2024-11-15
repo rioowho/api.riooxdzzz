@@ -11,7 +11,7 @@ app.set("json spaces", 2);
 
 // Middleware untuk CORS
 app.use(cors());
-async function blackbox(message, rioo) { // Membuat fungsi 
+async function blackbox(text, rioo) { // Membuat fungsi 
 const api = 'https://www.blackbox.ai/api/chat';
 const headers = {
   'User-Agent': 'Postify/1.0.0',
@@ -86,10 +86,10 @@ const BlackBox = {
     try {
       const response = await fetch(api, { method: 'POST', headers, body: JSON.stringify(data) });
       if (!response.ok) {
-        throw new Error(`${await response.message()}`);
+        throw new Error(`${await response.text()}`);
       }
 
-      let tc = await response.message();
+      let tc = await response.text();
       let tr = clear(tc);
 
 
@@ -100,7 +100,7 @@ const BlackBox = {
         }
 
         const cor = await fetch(api, { method: 'POST', headers, body: JSON.stringify(data) });
-        let ctc = await cor.message();
+        let ctc = await cor.text();
         tr += clear(ctc);
       }
 
