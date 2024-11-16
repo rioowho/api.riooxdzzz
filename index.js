@@ -12,7 +12,53 @@ app.set("json spaces", 2);
 
 // Middleware untuk CORS
 app.use(cors());
-
+async function PlayStore(message) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { data, status } = await axios.get(
+          `https://play.google.com/store/search?q=${message}&c=apps`,
+        ),
+        hasil = [],
+        $ = cheerio.load(data);
+      if (
+        ($(
+          ".ULeU3b > .VfPpkd-WsjYwc.VfPpkd-WsjYwc-OWXEXe-INsAgc.KC1dQ.Usd1Ac.AaN0Dd.Y8RQXd > .VfPpkd-aGsRMb > .VfPpkd-EScbFb-JIbuQc.TAQqTe > a",
+        ).each((i, u) => {
+          const linkk = $(u).attr("href"),
+            nama = $(u).find(".j2FCNc > .cXFu1 > .ubGTjb > .DdYX5").text(),
+            developer = $(u)
+              .find(".j2FCNc > .cXFu1 > .ubGTjb > .wMUdtb")
+              .text(),
+            img = $(u).find(".j2FCNc > img").attr("src"),
+            rate = $(u)
+              .find(".j2FCNc > .cXFu1 > .ubGTjb > div")
+              .attr("aria-label"),
+            rate2 = $(u)
+              .find(".j2FCNc > .cXFu1 > .ubGTjb > div > span.w2kbF")
+              .text(),
+            link = `https://play.google.com${linkk}`;
+          hasil.push({
+            link: link,
+            nama: nama || "No name",
+            developer: developer || "No Developer",
+            img: img || "https://i.ibb.co/G7CrCwN/404.png",
+            rate: rate || "No Rate",
+            rate2: rate2 || "No Rate",
+            link_dev: `https://play.google.com/store/apps/developer?id=${developer.split(" ").join("+")}`,
+          });
+        }),
+        hasil.every((x) => void 0 === x))
+      )
+        return resolve({
+          developer: "@RiooXdzz",
+          mess: "no result found",
+        });
+      resolve(hasil);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+}
 async function pinterest(message) {
 
     let res = await fetch(`https://www.pinterest.com/resource/BaseSearchResource/get/?source_url=%2Fsearch%2Fpins%2F%3Fq%3D${message}&data=%7B%22options%22%3A%7B%22isPrefetch%22%3Afalse%2C%22query%22%3A%22${message}%22%2C%22scope%22%3A%22pins%22%2C%22no_fetch_context_on_resource%22%3Afalse%7D%2C%22context%22%3A%7B%7D%7D&_=1619980301559`);
@@ -364,6 +410,22 @@ app.get('/api/search-pinterest', async (req, res) => {
       return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
     }
     const response = await ttSearch(message);
+    res.status(200).json({
+      status: 200,
+      creator: "RiooXdzz",
+      data: { response }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get('/api/search-playstore', async (req, res) => {
+  try {
+    const message = req.query.message;
+    if (!message) {
+      return res.status(400).json({ error: 'Parameter "message" tidak ditemukan' });
+    }
+    const response = await PlayStore(message);
     res.status(200).json({
       status: 200,
       creator: "RiooXdzz",
